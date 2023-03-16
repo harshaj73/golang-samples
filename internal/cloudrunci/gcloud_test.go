@@ -15,7 +15,7 @@
 package cloudrunci
 
 import (
-	"io/ioutil"
+	"bytes"
 	"log"
 	"os"
 	"os/exec"
@@ -43,22 +43,28 @@ func TestGcloud(t *testing.T) {
 		t.Errorf("gcloud: %v", err)
 	}
 
-	want := "gcloud - manage Google Cloud Platform resources and developer workflow"
+	want := "gcloud - manage Google Cloud"
 	if got := string(out); !strings.Contains(got, want) {
 		t.Errorf("gcloud: got (%s), want (%s)", got, want)
 	}
 }
 
 func TestGcloudRetry(t *testing.T) {
-	log.SetOutput(ioutil.Discard)
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
 	defer log.SetOutput(os.Stderr)
 
-	_, err := gcloud("failing", exec.Command("command-does-not-exist"))
+	_, err := gcloud("failing", exec.Command("false"))
 	if err == nil {
 		t.Errorf("gcloud: %v", err)
 	}
 
 	if want := "gave up after 5 failed attempts"; !strings.Contains(err.Error(), want) {
 		t.Errorf("gcloud: got %q, want contain %q", err.Error(), want)
+	}
+
+	// Ensure that the command was run multiple times, and without an exec error
+	if strings.Contains(buf.String(), "already started") {
+		t.Errorf("exec.Cmd object was reused, producing an 'already started' error")
 	}
 }

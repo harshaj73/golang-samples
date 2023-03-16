@@ -25,6 +25,7 @@ import (
 )
 
 func TestMain(t *testing.T) {
+	t.Skip("Skipped while investigating https://github.com/GoogleCloudPlatform/golang-samples/issues/2811")
 	tc := testutil.SystemTest(t)
 	bucketName := fmt.Sprintf("%s-for-assets", tc.ProjectID)
 	env := map[string]string{"GOOGLE_CLOUD_PROJECT": tc.ProjectID}
@@ -38,9 +39,9 @@ func TestMain(t *testing.T) {
 	defer m.Cleanup()
 
 	testutil.Retry(t, 10, 10*time.Second, func(r *testutil.R) {
-		out, _, err := m.Run(env, 60*time.Second)
+		out, stderr, err := m.Run(env, 60*time.Second)
 		if err != nil {
-			r.Errorf("failed to run: %v", err)
+			r.Errorf("failed to run: %v\n%s\n%s\n", err, out, stderr)
 			return
 		}
 

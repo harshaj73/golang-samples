@@ -24,9 +24,9 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	datacatalog "cloud.google.com/go/datacatalog/apiv1"
+	"cloud.google.com/go/datacatalog/apiv1/datacatalogpb"
 	"github.com/GoogleCloudPlatform/golang-samples/bigquery/snippets/bqtestutil"
 	"github.com/GoogleCloudPlatform/golang-samples/internal/testutil"
-	datacatalogpb "google.golang.org/genproto/googleapis/cloud/datacatalog/v1"
 )
 
 func TestApp(t *testing.T) {
@@ -44,6 +44,11 @@ func TestApp(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't setup BQ test resources: %v", err)
 	}
+
+	// Due to propagation delay, we introduce a small pause between resource creation and running
+	// the datacatalog quickstart to avoid test flakes.  In reality, you're more likely to have persistent
+	// resources, but we create everything from scratch every invocation when testing.
+	time.Sleep(2 * time.Second)
 
 	stdOut, stdErr, err := m.Run(nil, 30*time.Second, fmt.Sprintf("--project_id=%s", tc.ProjectID), fmt.Sprintf("--table=%s", table))
 	if err != nil {

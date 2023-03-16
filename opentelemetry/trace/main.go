@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//     https://www.apache.org/licenses/LICENSE-2.0
+//	https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -23,8 +23,11 @@ import (
 	"os"
 
 	texporter "github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace"
+	"go.opentelemetry.io/contrib/detectors/gcp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 )
 
 // [END opentelemetry_trace_import]
@@ -33,11 +36,25 @@ func main() {
 	// Create exporter.
 	ctx := context.Background()
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
-	exporter, err := texporter.NewExporter(texporter.WithProjectID(projectID))
+	exporter, err := texporter.New(texporter.WithProjectID(projectID))
 	if err != nil {
-		log.Fatalf("texporter.NewExporter: %v", err)
+		log.Fatalf("texporter.New: %v", err)
 	}
-	defer exporter.Shutdown(ctx) // flushes any pending spans
+
+	// Identify your application using resource detection
+	res, err := resource.New(ctx,
+		// Use the GCP resource detector to detect information about the GCP platform
+		resource.WithDetectors(gcp.NewDetector()),
+		// Keep the default detectors
+		resource.WithTelemetrySDK(),
+		// Add your own custom attributes to identify your application
+		resource.WithAttributes(
+			semconv.ServiceNameKey.String("my-application"),
+		),
+	)
+	if err != nil {
+		log.Fatalf("resource.New: %v", err)
+	}
 
 	// Create trace provider with the exporter.
 	//
@@ -46,7 +63,11 @@ func main() {
 	// probabilistic sampling.
 	// Example:
 	//   tp := sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.TraceIDRatioBased(0.0001)), ...)
-	tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		sdktrace.WithResource(res),
+	)
+	defer tp.ForceFlush(ctx) // flushes any pending spans
 	otel.SetTracerProvider(tp)
 
 	// [START opentelemetry_trace_custom_span]

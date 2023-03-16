@@ -15,10 +15,10 @@
 // Sample firestore_quickstart demonstrates how to connect to Firestore, and add and list documents.
 package main
 
-// [START fs_initialize]
 // [START firestore_setup_client_create]
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 
@@ -31,6 +31,12 @@ func createClient(ctx context.Context) *firestore.Client {
 	// Sets your Google Cloud Platform project ID.
 	projectID := "YOUR_PROJECT_ID"
 
+	// [END firestore_setup_client_create]
+	// Override with -project flags
+	flag.StringVar(&projectID, "project", projectID, "The Google Cloud Platform project ID.")
+	flag.Parse()
+
+	// [START firestore_setup_client_create]
 	client, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
@@ -41,7 +47,6 @@ func createClient(ctx context.Context) *firestore.Client {
 }
 
 // [END firestore_setup_client_create]
-// [END fs_initialize]
 
 func main() {
 	// Get a Firestore client.
@@ -49,7 +54,6 @@ func main() {
 	client := createClient(ctx)
 	defer client.Close()
 
-	// [START fs_add_data_1]
 	// [START firestore_setup_dataset_pt1]
 	_, _, err := client.Collection("users").Add(ctx, map[string]interface{}{
 		"first": "Ada",
@@ -60,9 +64,7 @@ func main() {
 		log.Fatalf("Failed adding alovelace: %v", err)
 	}
 	// [END firestore_setup_dataset_pt1]
-	// [END fs_add_data_1]
 
-	// [START fs_add_data_2]
 	// [START firestore_setup_dataset_pt2]
 	_, _, err = client.Collection("users").Add(ctx, map[string]interface{}{
 		"first":  "Alan",
@@ -74,9 +76,7 @@ func main() {
 		log.Fatalf("Failed adding aturing: %v", err)
 	}
 	// [END firestore_setup_dataset_pt2]
-	// [END fs_add_data_2]
 
-	// [START fs_get_all_users]
 	// [START firestore_setup_dataset_read]
 	iter := client.Collection("users").Documents(ctx)
 	for {
@@ -90,5 +90,4 @@ func main() {
 		fmt.Println(doc.Data())
 	}
 	// [END firestore_setup_dataset_read]
-	// [END fs_get_all_users]
 }

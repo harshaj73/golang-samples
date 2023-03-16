@@ -27,7 +27,7 @@ import (
 	"strings"
 
 	speech "cloud.google.com/go/speech/apiv1"
-	speechpb "google.golang.org/genproto/googleapis/cloud/speech/v1"
+	"cloud.google.com/go/speech/apiv1/speechpb"
 )
 
 const usage = `Usage: caption <audiofile>
@@ -35,8 +35,7 @@ const usage = `Usage: caption <audiofile>
 Audio file must be a 16-bit signed little-endian encoded
 with a sample rate of 16000.
 
-The path to the audio file may be a GCS URI (gs://...).
-`
+The path to the audio file may be a GCS URI (gs://...).`
 
 func main() {
 	flag.Parse()

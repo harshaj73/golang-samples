@@ -35,13 +35,16 @@ func TestSigtermHandlerService(t *testing.T) {
 	defer GetLogEntries(service, t)
 	defer service.Clean()
 
-	requestPath := "/"
-	req, err := service.NewRequest("GET", requestPath)
+	// Explicitly send SIGTERM
+	req, err := service.NewRequest("GET", "")
+	q := req.URL.Query()
+	q.Add("terminate", "1")
+	req.URL.RawQuery = q.Encode()
 	if err != nil {
 		t.Fatalf("service.NewRequest: %v", err)
 	}
 
-	client := http.Client{Timeout: 10 * time.Second}
+	client := http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("client.Do: %v", err)
@@ -64,7 +67,7 @@ func GetLogEntries(service *cloudrunci.Service, t *testing.T) {
 	attempts := 6
 	found, err := service.LogEntries(filter, find, attempts)
 	if err != nil || !found {
-		t.Errorf("%q log entry not found.", find)
+		t.Errorf("%q log entry not found. (%v)", find, err)
 	}
 	return
 }

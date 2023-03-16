@@ -19,14 +19,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"runtime"
 	"sync/atomic"
 	"time"
 
 	"cloud.google.com/go/pubsub"
 )
 
-func pullMsgsConcurrenyControl(w io.Writer, projectID, subID string) error {
+func pullMsgsConcurrencyControl(w io.Writer, projectID, subID string) error {
 	// projectID := "my-project-id"
 	// subID := "my-sub"
 	ctx := context.Background()
@@ -38,30 +37,34 @@ func pullMsgsConcurrenyControl(w io.Writer, projectID, subID string) error {
 
 	sub := client.Subscription(subID)
 	// Must set ReceiveSettings.Synchronous to false (or leave as default) to enable
-	// concurrency settings. Otherwise, NumGoroutines will be set to 1.
+	// concurrency pulling of messages. Otherwise, NumGoroutines will be set to 1.
 	sub.ReceiveSettings.Synchronous = false
-	// NumGoroutines is the number of goroutines sub.Receive will spawn to pull
-	// messages concurrently.
-	sub.ReceiveSettings.NumGoroutines = runtime.NumCPU()
+	// NumGoroutines determines the number of goroutines sub.Receive will spawn to pull
+	// messages.
+	sub.ReceiveSettings.NumGoroutines = 16
+	// MaxOutstandingMessages limits the number of concurrent handlers of messages.
+	// In this case, up to 8 unacked messages can be handled concurrently.
+	// Note, even in synchronous mode, messages pulled in a batch can still be handled
+	// concurrently.
+	sub.ReceiveSettings.MaxOutstandingMessages = 8
 
-	// Receive messages for 10 seconds.
+	// Receive messages for 10 seconds, which simplifies testing.
+	// Comment this out in production, since `Receive` should
+	// be used as a long running operation.
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	var counter int32
+	var received int32
 
 	// Receive blocks until the context is cancelled or an error occurs.
 	err = sub.Receive(ctx, func(_ context.Context, msg *pubsub.Message) {
-		// The message handler passed to Receive may be called concurrently
-		// so it's okay to process the messages concurrently but make sure
-		// to synchronize access to shared memory.
-		atomic.AddInt32(&counter, 1)
+		atomic.AddInt32(&received, 1)
 		msg.Ack()
 	})
 	if err != nil {
-		return fmt.Errorf("pubsub: Receive returned error: %v", err)
+		return fmt.Errorf("sub.Receive returned error: %v", err)
 	}
-	fmt.Fprintf(w, "Received %d messages\n", counter)
+	fmt.Fprintf(w, "Received %d messages\n", received)
 
 	return nil
 }

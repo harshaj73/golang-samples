@@ -4,9 +4,10 @@ assign_issues_by:
   - 'api: datastore'
   - 'api: firestore'
   to:
-  - crwilcox
+  - GoogleCloudPlatform/cloud-native-db-dpes
 - labels:
   - 'api: storage'
+  - 'api: storagetransfer'
   to:
   - tritone
 - labels:
@@ -26,7 +27,7 @@ assign_issues_by:
   - 'api: logging'
   - 'api: clouderrorreporting'
   to:
-  - nicoleczhu
+  - GoogleCloudPlatform/observability-devx
 - labels:
   - 'api: pubsub'
   to:
@@ -38,14 +39,28 @@ assign_issues_by:
 - labels:
   - 'api: spanner'
   to:
-  - skuruppu
+  - rahul2393
 - labels:
   - 'api: cloudiot'
   to:
   - attilagargyan
+- labels:
+  - 'api: cloudsql'
+  to:
+  - GoogleCloudPlatform/infra-db-dpes
 
 assign_prs_by:
 - labels:
   - 'api: cloudiot'
   to:
   - attilagargyan
+- labels:
+  - 'api: bigtable'
+  - 'api: datastore'
+  - 'api: firestore'
+  to:
+  - GoogleCloudPlatform/cloud-native-db-dpes
+- labels:
+  - 'api: cloudsql'
+  to:
+  - GoogleCloudPlatform/infra-db-dpes

@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	asset "cloud.google.com/go/asset/apiv1"
-	assetpb "google.golang.org/genproto/googleapis/cloud/asset/v1"
+	"cloud.google.com/go/asset/apiv1/assetpb"
 )
 
 func main() {
@@ -45,6 +45,7 @@ func main() {
 				BigqueryDestination: &assetpb.BigQueryDestination{
 					Dataset: dataset,
 					Table:   "test",
+					Force:   true,
 				},
 			},
 		},
